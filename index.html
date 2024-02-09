@@ -161,6 +161,10 @@
     let night = new Team(colorPalette.NocturnalExpedition, colorPalette.DeepSaffron);
     let noon = new Team(colorPalette.Forsythia, colorPalette.NocturnalExpedition);
     let midnight = new Team(colorPalette.DeepSaffron, colorPalette.MysticMint);
+    let day2 = new Team(colorPalette.MysticMint, colorPalette.Forsythia);
+    let night2 = new Team(colorPalette.NocturnalExpedition, colorPalette.DeepSaffron);
+    let noon2 = new Team(colorPalette.Forsythia, colorPalette.NocturnalExpedition);
+    let midnight2 = new Team(colorPalette.DeepSaffron, colorPalette.MysticMint);
 
     const SPEED = 25;
 
@@ -207,20 +211,40 @@
     day.ball.dx = 1;
     day.ball.dy = 1;
 
+    day2.ball.x = (numSquaresX / 4) * Square.SIZE;
+    day2.ball.y = (numSquaresY / 4) * Square.SIZE;
+    day2.ball.dx = -1;
+    day2.ball.dy = -1;
+
     night.ball.x = (numSquaresX / 4) * Square.SIZE;
     night.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
     night.ball.dx = -1;
     night.ball.dy = 1;
+
+    night2.ball.x = (numSquaresX / 4) * Square.SIZE;
+    night2.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
+    night2.ball.dx = 1;
+    night2.ball.dy = -1;
 
     noon.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
     noon.ball.y = (numSquaresY / 4) * Square.SIZE;
     noon.ball.dx = 1;
     noon.ball.dy = 1;
 
+    noon2.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
+    noon2.ball.y = (numSquaresY / 4) * Square.SIZE;
+    noon2.ball.dx = -1;
+    noon2.ball.dy = -1;
+
     midnight.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
     midnight.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
     midnight.ball.dx = -1;
     midnight.ball.dy = 1;
+
+    midnight2.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
+    midnight2.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
+    midnight2.ball.dx = 1;
+    midnight2.ball.dy = -1;
 
     function calculateDistance(p1, p2) {
       return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
@@ -422,9 +446,13 @@
       let step = 0
       while (step < SPEED) {
         calculateNextStep(day);
+        calculateNextStep(day2);
         calculateNextStep(night);
+        calculateNextStep(night2);
         calculateNextStep(noon);
+        calculateNextStep(noon2);
         calculateNextStep(midnight);
+        calculateNextStep(midnight2);
 
         step++;
       }
@@ -435,9 +463,13 @@
       drawSquares();
 
       drawBall(day);
+      drawBall(day2);
       drawBall(night);
+      drawBall(night2);
       drawBall(noon);
+      drawBall(noon2);
       drawBall(midnight);
+      drawBall(midnight2);
 
       calculateNextFrame();
 
