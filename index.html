@@ -48,8 +48,25 @@
         font-family: monospace;
         margin-top: 30px;
         font-size: 16px;
-        padding-left: 20px;
         color: #172b36;
+        display: flex;
+        flex-direction: row;
+        text-align: right;
+        width: 100%;
+      }
+
+      #score > div:first-child {
+        width: 50%;
+        border-right: solid #172b36 2px;
+      }
+
+      #score > div:last-child {
+        text-align: left;
+      }
+
+      .score {
+        padding-right: 12px;
+        padding-left: 12px;
       }
 
       #made {
@@ -70,7 +87,16 @@
   <body>
     <div id="container">
       <canvas id="pongCanvas" width="1600" height="1600"></canvas>
-      <div id="score"></div>
+      <div id="score">
+        <div class="column">
+          <div class="score"></div>
+          <div class="score"></div>
+        </div>
+        <div class="column">
+          <div class="score"></div>
+          <div class="score"></div>
+        </div>
+      </div>
       <p id="made">
         made by <a href="https://koenvangilst.nl">Koen van Gilst</a> | source on
         <a href="https://github.com/vnglst/pong-wars">github</a>
@@ -93,7 +119,7 @@
 
     const canvas = document.getElementById("pongCanvas");
     const ctx = canvas.getContext("2d");
-    const scoreElement = document.getElementById("score");
+    const scoreElements = document.querySelectorAll(".score");
 
     class Point {
       constructor(x = 0, y = 0) {
@@ -131,13 +157,15 @@
       }
     }
 
-    let day = new Team(colorPalette.MysticMint, colorPalette.NocturnalExpedition);
-    let night = new Team(colorPalette.NocturnalExpedition, colorPalette.MysticMint);
+    let day = new Team(colorPalette.MysticMint, colorPalette.Forsythia);
+    let night = new Team(colorPalette.NocturnalExpedition, colorPalette.DeepSaffron);
+    let noon = new Team(colorPalette.Forsythia, colorPalette.NocturnalExpedition);
+    let midnight = new Team(colorPalette.DeepSaffron, colorPalette.MysticMint);
 
     const SPEED = 25;
-    
+
     let iteration = 0;
-    
+
     const numSquaresX = canvas.width / Square.SIZE;
     const numSquaresY = canvas.height / Square.SIZE;
 
@@ -151,12 +179,24 @@
       for (let sy = 0; sy < numSquaresY; sy++) {
         let color;
         if (sx < Math.floor(numSquaresX / 2)) {
-          color = day.color;
-          day.score++;
+          if (sy < Math.floor(numSquaresY / 2)) {
+            color = day.color;
+            day.score++;
+          }
+          else {
+            color = night.color;
+            night.score++;
+          }
         }
         else {
-          color = night.color;
-          night.score++;
+          if (sy < Math.floor(numSquaresY / 2)) {
+            color = noon.color;
+            noon.score++;
+          }
+          else {
+            color = midnight.color;
+            midnight.score++;
+          }
         }
         colorPixelsInSquare(new Square(sx, sy), color);
       }
@@ -167,10 +207,20 @@
     day.ball.dx = 1;
     day.ball.dy = 1;
 
-    night.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
+    night.ball.x = (numSquaresX / 4) * Square.SIZE;
     night.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
     night.ball.dx = -1;
     night.ball.dy = 1;
+
+    noon.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
+    noon.ball.y = (numSquaresY / 4) * Square.SIZE;
+    noon.ball.dx = 1;
+    noon.ball.dy = 1;
+
+    midnight.ball.x = (3 * numSquaresX / 4) * Square.SIZE;
+    midnight.ball.y = (3 * numSquaresY / 4) * Square.SIZE;
+    midnight.ball.dx = -1;
+    midnight.ball.dy = 1;
 
     function calculateDistance(p1, p2) {
       return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
@@ -294,7 +344,10 @@
     }
 
     function updateScoreElement() {
-      scoreElement.textContent = `day ${day.score} | night ${night.score}`;
+      scoreElements[0].innerText = `day ${day.score}`;
+      scoreElements[1].innerText = `night ${night.score}`;
+      scoreElements[2].innerText = `${noon.score} noon`;
+      scoreElements[3].innerText = `${midnight.score} midnight`;
     }
 
     function calculateNextStep(team) {
@@ -370,6 +423,8 @@
       while (step < SPEED) {
         calculateNextStep(day);
         calculateNextStep(night);
+        calculateNextStep(noon);
+        calculateNextStep(midnight);
 
         step++;
       }
@@ -381,6 +436,8 @@
 
       drawBall(day);
       drawBall(night);
+      drawBall(noon);
+      drawBall(midnight);
 
       calculateNextFrame();
 
