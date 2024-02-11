@@ -37,7 +37,7 @@
 
       #pongCanvas {
         display: block;
-        border-radius: 4px;
+        border-radius: 50%;
         overflow: hidden;
         width: 100%;
         margin-top: auto;
@@ -69,7 +69,7 @@
 
   <body>
     <div id="container">
-      <canvas id="pongCanvas" width="720" height="720"></canvas>
+      <canvas id="pongCanvas" width="900" height="900"></canvas>
       <div id="score"></div>
       <p id="made">
         made by <a href="https://koenvangilst.nl">Koen van Gilst</a> | source on
@@ -95,13 +95,13 @@
     const ctx = canvas.getContext("2d");
     const scoreElement = document.getElementById("score");
 
-    const DAY_COLOR = colorPalette.MysticMint;
-    const DAY_BALL_COLOR = colorPalette.NocturnalExpedition;
+    const YIN_COLOR = colorPalette.MysticMint;
+    const YIN_BALL_COLOR = colorPalette.NocturnalExpedition;
 
-    const NIGHT_COLOR = colorPalette.NocturnalExpedition;
-    const NIGHT_BALL_COLOR = colorPalette.MysticMint;
+    const YANG_COLOR = colorPalette.NocturnalExpedition;
+    const YANG_BALL_COLOR = colorPalette.MysticMint;
 
-    const SPEED = 10;
+    const SPEED = 100;
     const SQUARE_SIZE = 30; // must be an even integer and a factor of the canvas size
 
     const BALL_RADIUS = SQUARE_SIZE / 2;
@@ -116,22 +116,22 @@
     let squares = [];
 
 
-    let xDay = canvas.width / 4;
-    let yDay = canvas.height / 2;
-    let angleDay = 1.7; // radians [0, 2)
+    let xYin = canvas.width / 2;
+    let yYin = canvas.height / 4;
+    let angleYin = 1; // radians [0, 2)
 
-    let dxDay = calculateDxFromAngle(angleDay);
-    let dyDay = calculateDyFromAngle(angleDay);
+    let dxYin = calculateDxFromAngle(angleYin);
+    let dyYin = calculateDyFromAngle(angleYin);
 
-    let xNight = 3 * canvas.width / 4;
-    let yNight = canvas.height / 2;
-    let angleNight = 0.8; // radians [0, 2)
+    let xYang = canvas.width / 2;
+    let yYang = 3 * canvas.height / 4;
+    let angleYang = 0; // radians [0, 2)
 
-    let dxNight = calculateDxFromAngle(angleNight);
-    let dyNight = calculateDyFromAngle(angleNight);
+    let dxYang = calculateDxFromAngle(angleYang);
+    let dyYang = calculateDyFromAngle(angleYang);
 
-    let scoreNight = 0;
-    let scoreDay = 0;
+    let scoreYang = 0;
+    let scoreYin = 0;
 
     let iteration = 0;
 
@@ -139,12 +139,30 @@
       squares[i] = [];
       for (let j = 0; j < numSquaresY; j++) {
         if (i < numSquaresX / 2) {
-          squares[i][j] = DAY_COLOR;
-          scoreDay++;
+          squares[i][j] = YIN_COLOR;
+          scoreYin++;
         }
         else {
-          squares[i][j] = NIGHT_COLOR;
-          scoreNight++;
+          squares[i][j] = YANG_COLOR;
+          scoreYang++;
+        }
+      }
+    }
+
+    for (let i = numSquaresX / 2; i < 3 * numSquaresX / 4; i++) {
+      for (let j = 0; j < numSquaresY / 2; j++) {
+        let distance = Math.floor(calculateDistance(i, j, numSquaresX/2, numSquaresY/4));
+        if (distance <= numSquaresX/4) {
+          squares[i][j] = YIN_COLOR;
+        }
+      }
+    }
+
+    for (let i = numSquaresX / 2 - 1; i > (numSquaresX / 4) - 1; i--) {
+      for (let j = numSquaresY / 2; j < numSquaresY; j++) {
+        let distance = Math.floor((calculateDistance(i, j, numSquaresX / 2, 3 * numSquaresY / 4)));
+        if (distance <= numSquaresX/4) {
+          squares[i][j] = YANG_COLOR;
         }
       }
     }
@@ -154,21 +172,34 @@
       ctx.arc(x, y, BALL_RADIUS, 0, Math.PI * 2, false);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.closePath();
     }
 
     function drawSquares() {
+      ctx.save()
+      ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.beginPath();
+      ctx.fillStyle = YANG_COLOR;
+      ctx.rect(0, 0, canvas.width, canvas.height);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = YIN_COLOR;
       for (let i = 0; i < numSquaresX; i++) {
         for (let j = 0; j < numSquaresY; j++) {
-          ctx.fillStyle = squares[i][j];
-          ctx.fillRect(
-            i * SQUARE_SIZE,
-            j * SQUARE_SIZE,
-            SQUARE_SIZE,
-            SQUARE_SIZE
-          );
+          if (squares[i][j] === YIN_COLOR) {
+            ctx.rect(
+                    i * SQUARE_SIZE,
+                    j * SQUARE_SIZE,
+                    SQUARE_SIZE,
+                    SQUARE_SIZE
+            );
+          }
         }
       }
+      ctx.fill();
+      ctx.restore();
     }
 
     function calculateDistance(p1x, p1y, p2x, p2y) {
@@ -264,7 +295,8 @@
                 : Math.floor(yCheck);
 
         // boundary collision
-        if (xCheck < 0 || xCheck >= canvas.width || yCheck < 0 || yCheck >= canvas.height) {
+        let dCheckCenter = calculateDistance(xCheck, yCheck, canvas.width / 2 - 1, canvas.height / 2 - 1);
+        if (dCheckCenter > canvas.width / 2) {
           angleCols.push(angleCheck);
         }
 
@@ -275,13 +307,13 @@
           // Only flip color if other ball is not inside square
           if (!isBallInSquare(sxCheck, syCheck, xOtherBall, yOtherBall)) {
             squares[sxCheck][syCheck] = color;
-            if (color === DAY_COLOR) {
-              scoreDay++;
-              scoreNight--;
+            if (color === YIN_COLOR) {
+              scoreYin++;
+              scoreYang--;
             }
             else {
-              scoreNight++;
-              scoreDay--;
+              scoreYang++;
+              scoreYin--;
             }
           }
           angleCols.push(angleCheck);
@@ -326,32 +358,32 @@
     }
 
     function updateScoreElement() {
-      scoreElement.textContent = `day ${scoreDay} | night ${scoreNight}`;
+      scoreElement.textContent = `yin ${scoreYin} | yang ${scoreYang}`;
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawSquares();
 
-      drawBall(xDay, yDay, DAY_BALL_COLOR);
-      drawBall(xNight, yNight, NIGHT_BALL_COLOR);
+      drawBall(xYin, yYin, YIN_BALL_COLOR);
+      drawBall(xYang, yYang, YANG_BALL_COLOR);
 
       for (let step = 0; step < SPEED; step++) {
-        let bounceDay = updateSquareAndBounce(xDay, yDay, dxDay, dyDay, angleDay, DAY_COLOR, xNight, yNight);
-        dxDay = bounceDay.dx;
-        dyDay = bounceDay.dy;
-        angleDay = bounceDay.angle;
+        let bounceYin = updateSquareAndBounce(xYin, yYin, dxYin, dyYin, angleYin, YIN_COLOR, xYang, yYang);
+        dxYin = bounceYin.dx;
+        dyYin = bounceYin.dy;
+        angleYin = bounceYin.angle;
 
-        xDay += dxDay;
-        yDay += dyDay;
+        xYin += dxYin;
+        yYin += dyYin;
 
-        let bounceNight = updateSquareAndBounce(xNight, yNight, dxNight, dyNight, angleNight, NIGHT_COLOR, xDay, yDay);
-        dxNight = bounceNight.dx;
-        dyNight = bounceNight.dy;
-        angleNight = bounceNight.angle;
+        let bounceYang = updateSquareAndBounce(xYang, yYang, dxYang, dyYang, angleYang, YANG_COLOR, xYin, yYin);
+        dxYang = bounceYang.dx;
+        dyYang = bounceYang.dy;
+        angleYang = bounceYang.angle;
 
-        xNight += dxNight;
-        yNight += dyNight;
+        xYang += dxYang;
+        yYang += dyYang;
       }
 
       iteration++;
