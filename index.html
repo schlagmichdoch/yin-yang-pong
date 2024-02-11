@@ -293,6 +293,13 @@
         let angleIncidentMirrored, angleColDiff, angleReflection;
         let angleIncident = angleOld;
 
+        // Number of collision angles must be even. If number is odd, merge inner 2 angles.
+        if (angleCols.length % 2 === 0) {
+          let middleOfIndex = angleCols.length / 2 - 1;
+          angleCols[middleOfIndex] = (angleCols[middleOfIndex] + angleCols[middleOfIndex + 1]) / 2
+          angleCols.splice(middleOfIndex + 1, 1);
+        }
+
         for (let i = 0; i < angleCols.length; i++) {
           angleIncidentMirrored = angleIncident + 1;
           angleColDiff = 2 - (angleIncidentMirrored - angleCols[i]);
