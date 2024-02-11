@@ -101,7 +101,7 @@
     const YANG_COLOR = colorPalette.NocturnalExpedition;
     const YANG_BALL_COLOR = colorPalette.MysticMint;
 
-    const SPEED = 100;
+    const SPEED = 10;
     const SQUARE_SIZE = 30; // must be an even integer and a factor of the canvas size
 
     const BALL_RADIUS = SQUARE_SIZE / 2;
@@ -139,31 +139,67 @@
     for (let i = 0; i < numSquaresX; i++) {
       squares[i] = [];
       for (let j = 0; j < numSquaresY; j++) {
-        if (i < numSquaresX / 2) {
-          squares[i][j] = YIN_COLOR;
-          scoreYin++;
+        let sxCenter = i < Math.floor(numSquaresX / 2)
+                ? i * SQUARE_SIZE + SQUARE_SIZE
+                : i * SQUARE_SIZE;
+        let syCenter = j < Math.floor(numSquaresY / 2)
+                ? j * SQUARE_SIZE + SQUARE_SIZE
+                : j * SQUARE_SIZE;
+
+        let distance = calculateDistance(sxCenter, syCenter, canvas.width / 2, canvas.height / 2);
+        if (distance <= canvas.width / 2) {
+          if (
+                  (j < Math.ceil(numSquaresY / 2) && i < Math.floor(numSquaresX / 2) + 1)
+                  || (j >= Math.ceil(numSquaresY / 2) && i < numSquaresX / 2 - 1)
+          ) {
+            squares[i][j] = YIN_COLOR;
+            scoreYin++;
+          }
+          else {
+            squares[i][j] = YANG_COLOR;
+            scoreYang++;
+          }
         }
         else {
+          squares[i][j] = false;
+        }
+      }
+    }
+
+    for (let i = Math.floor(numSquaresX / 2); i < Math.floor(3 * numSquaresX / 4); i++) {
+      for (let j = 0; j < Math.floor(numSquaresY / 2); j++) {
+        let sxCenter = i < Math.floor(numSquaresX / 2)
+                ? i * SQUARE_SIZE + SQUARE_SIZE
+                : i * SQUARE_SIZE;
+        let syCenter = j < Math.floor(numSquaresX / 2)
+                ? j * SQUARE_SIZE + SQUARE_SIZE
+                : j * SQUARE_SIZE;
+
+        let distance = calculateDistance(sxCenter, syCenter, canvas.width / 2, canvas.height / 4);
+
+        if (squares[i][j] === YANG_COLOR && distance <= canvas.width / 4 - 1) {
+          squares[i][j] = YIN_COLOR;
+          scoreYin++;
+          scoreYang--;
+        }
+      }
+    }
+
+    for (let i = Math.ceil(numSquaresX / 2) - 1; i > Math.ceil(numSquaresX / 4) - 1; i--) {
+      for (let j = Math.floor(numSquaresY / 2); j < numSquaresY; j++) {
+        let sxCenter = i < Math.floor(numSquaresX / 2)
+                ? i * SQUARE_SIZE + SQUARE_SIZE
+                : i * SQUARE_SIZE;
+        let syCenter = j < Math.floor(numSquaresX / 2)
+                ? j * SQUARE_SIZE + SQUARE_SIZE
+                : j * SQUARE_SIZE;
+
+        let distance = calculateDistance(sxCenter, syCenter, canvas.width / 2, 3 * canvas.height / 4);
+
+        if (squares[i][j] === YIN_COLOR && distance <= canvas.width / 4 - 1) {
           squares[i][j] = YANG_COLOR;
           scoreYang++;
-        }
-      }
-    }
-
-    for (let i = numSquaresX / 2; i < 3 * numSquaresX / 4; i++) {
-      for (let j = 0; j < numSquaresY / 2; j++) {
-        let distance = Math.floor(calculateDistance(i, j, numSquaresX/2, numSquaresY/4));
-        if (distance <= numSquaresX/4) {
-          squares[i][j] = YIN_COLOR;
-        }
-      }
-    }
-
-    for (let i = numSquaresX / 2 - 1; i > (numSquaresX / 4) - 1; i--) {
-      for (let j = numSquaresY / 2; j < numSquaresY; j++) {
-        let distance = Math.floor((calculateDistance(i, j, numSquaresX / 2, 3 * numSquaresY / 4)));
-        if (distance <= numSquaresX/4) {
-          squares[i][j] = YANG_COLOR;
+          scoreYin--;
         }
       }
     }
@@ -176,31 +212,21 @@
     }
 
     function drawSquares() {
-      ctx.save()
-      ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
-      ctx.clip();
-
-      ctx.beginPath();
-      ctx.fillStyle = YANG_COLOR;
-      ctx.rect(0, 0, canvas.width, canvas.height);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.fillStyle = YIN_COLOR;
       for (let i = 0; i < numSquaresX; i++) {
         for (let j = 0; j < numSquaresY; j++) {
-          if (squares[i][j] === YIN_COLOR) {
+          if (squares[i][j]) {
+            ctx.beginPath();
+            ctx.fillStyle = squares[i][j];
             ctx.rect(
                     i * SQUARE_SIZE,
                     j * SQUARE_SIZE,
                     SQUARE_SIZE,
                     SQUARE_SIZE
             );
+            ctx.fill();
           }
         }
       }
-      ctx.fill();
-      ctx.restore();
     }
 
     function calculateDistance(p1x, p1y, p2x, p2y) {
