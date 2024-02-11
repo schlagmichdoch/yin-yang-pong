@@ -48,8 +48,25 @@
         font-family: monospace;
         margin-top: 30px;
         font-size: 16px;
-        padding-left: 20px;
         color: #172b36;
+        display: flex;
+        flex-direction: row;
+        text-align: right;
+        width: 100%;
+      }
+
+      #score > div:first-child {
+        width: 50%;
+        border-right: solid #172b36 2px;
+      }
+
+      #score > div:last-child {
+        text-align: left;
+      }
+
+      .score {
+        padding-right: 12px;
+        padding-left: 12px;
       }
 
       #made {
@@ -70,7 +87,16 @@
   <body>
     <div id="container">
       <canvas id="pongCanvas" width="720" height="720"></canvas>
-      <div id="score"></div>
+      <div id="score">
+        <div class="column">
+          <div class="score"></div>
+          <div class="score"></div>
+        </div>
+        <div class="column">
+          <div class="score"></div>
+          <div class="score"></div>
+        </div>
+      </div>
       <p id="made">
         made by <a href="https://koenvangilst.nl">Koen van Gilst</a> | source on
         <a href="https://github.com/vnglst/pong-wars">github</a>
@@ -93,12 +119,17 @@
 
     const canvas = document.getElementById("pongCanvas");
     const ctx = canvas.getContext("2d");
-    const scoreElement = document.getElementById("score");
+    const scoreElements = document.getElementsByClassName("score");
 
     const DAY_COLOR = colorPalette.MysticMint;
-    const DAY_BALL_COLOR = colorPalette.NocturnalExpedition;
     const NIGHT_COLOR = colorPalette.NocturnalExpedition;
-    const NIGHT_BALL_COLOR = colorPalette.MysticMint;
+    const NOON_COLOR = colorPalette.Forsythia;
+    const MIDNIGHT_COLOR = colorPalette.DeepSaffron;
+
+    const DAY_BALL_COLOR = colorPalette.Forsythia;
+    const NIGHT_BALL_COLOR = colorPalette.DeepSaffron;
+    const NOON_BALL_COLOR = colorPalette.NocturnalExpedition;
+    const MIDNIGHT_BALL_COLOR = colorPalette.MysticMint;
 
     const SPEED = 10;
     const SQUARE_SIZE = 30; // must be an even integer and a factor of the canvas size
@@ -116,6 +147,8 @@
     const scores = [];
     scores[DAY_COLOR] = 0;
     scores[NIGHT_COLOR] = 0;
+    scores[NOON_COLOR] = 0;
+    scores[MIDNIGHT_COLOR] = 0;
 
     const squares = [];
 
@@ -124,12 +157,24 @@
       squares[i] = [];
       for (let j = 0; j < numSquaresY; j++) {
         if (i < numSquaresX / 2) {
-          squares[i][j] = DAY_COLOR;
-          scores[DAY_COLOR]++;
+          if (j < numSquaresX / 2) {
+            squares[i][j] = DAY_COLOR;
+            scores[DAY_COLOR]++;
+          }
+          else {
+            squares[i][j] = NIGHT_COLOR;
+            scores[NIGHT_COLOR]++;
+          }
         }
         else {
-          squares[i][j] = NIGHT_COLOR;
-          scores[NIGHT_COLOR]++;
+          if (j < numSquaresX / 2) {
+            squares[i][j] = NOON_COLOR;
+            scores[NOON_COLOR]++;
+          }
+          else {
+            squares[i][j] = MIDNIGHT_COLOR;
+            scores[MIDNIGHT_COLOR]++;
+          }
         }
       }
     }
@@ -137,18 +182,32 @@
     const balls = [
       {
         x: canvas.width / 4,
-        y: canvas.height / 2,
+        y: canvas.height / 4,
         angle: 1.7, // radians [0, 2)
         color: DAY_COLOR,
         ballColor: DAY_BALL_COLOR,
       },
       {
-        x: (canvas.width / 4) * 3,
-        y: canvas.height / 2,
+        x: canvas.width / 4,
+        y: (canvas.height / 4) * 3,
         angle: 0.8, // radians [0, 2)
         color: NIGHT_COLOR,
         ballColor: NIGHT_BALL_COLOR,
-      }
+      },
+      {
+        x: (canvas.width / 4) * 3,
+        y: canvas.height / 4,
+        angle: 1.7, // radians [0, 2)
+        color: NOON_COLOR,
+        ballColor: NOON_BALL_COLOR,
+      },
+      {
+        x: (canvas.width / 4) * 3,
+        y: (canvas.height / 4) * 3,
+        angle: 0.8, // radians [0, 2)
+        color: MIDNIGHT_COLOR,
+        ballColor: MIDNIGHT_BALL_COLOR,
+      },
     ];
 
     balls.forEach((ball) => {
@@ -417,7 +476,10 @@
     }
 
     function updateScoreElement() {
-      scoreElement.textContent = `day ${scores[DAY_COLOR]} | night ${scores[NIGHT_COLOR]}`;
+      scoreElements[0].innerText = `day ${scores[DAY_COLOR]}`;
+      scoreElements[1].innerText = `night ${scores[NIGHT_COLOR]}`;
+      scoreElements[2].innerText = `${scores[NOON_COLOR]} noon`;
+      scoreElements[3].innerText = `${scores[MIDNIGHT_COLOR]} midnight`;
     }
 
     function draw() {
