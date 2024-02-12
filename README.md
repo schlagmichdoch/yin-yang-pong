@@ -4,7 +4,7 @@ It's the eternal battle between yin and yang, bad in good vs. good in bad. \
 Written in JavaScript with some HTML & CSS in one index.html. \
 Feel free to reuse the code and create your own version.
 
-[yin-yang.webm](https://github.com/schlagmichdoch/yin-yang-pong/assets/52242352/99807c9d-9ac8-417c-813b-e0c837b468a9)
+[yin-yang.mp4](https://github.com/schlagmichdoch/yin-yang-pong/assets/52242352/ec9456af-36a3-4c50-b313-afa5f486516c)
 
 ## Development
 
