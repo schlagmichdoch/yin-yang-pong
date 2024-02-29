@@ -123,27 +123,32 @@
     for (let i = 0; i < numSquaresX; i++) {
       squares[i] = [];
       for (let j = 0; j < numSquaresY; j++) {
-        if (i < numSquaresX / 2) {
-          squares[i][j] = DAY_COLOR;
-          scores[DAY_COLOR]++;
-        }
-        else {
+        if (
+                i >= numSquaresX / 4
+                && j >= numSquaresY / 4
+                && i < 3 * numSquaresX / 4
+                && j < 3 * numSquaresY / 4
+        ) {
           squares[i][j] = NIGHT_COLOR;
           scores[NIGHT_COLOR]++;
+        }
+        else {
+          squares[i][j] = DAY_COLOR;
+          scores[DAY_COLOR]++;
         }
       }
     }
 
     const balls = [
       {
-        x: canvas.width / 4,
-        y: canvas.height / 2,
+        x: canvas.width / 8,
+        y: canvas.height / 8,
         angle: 1.7, // radians [0, 2)
         color: DAY_COLOR,
         ballColor: DAY_BALL_COLOR,
       },
       {
-        x: (canvas.width / 4) * 3,
+        x: canvas.width / 2,
         y: canvas.height / 2,
         angle: 0.8, // radians [0, 2)
         color: NIGHT_COLOR,
@@ -164,6 +169,34 @@
       ctx.fillStyle = ball.ballColor;
       ctx.fill();
       ctx.closePath();
+
+      // Draw mirror ball
+      let mirrorBall = {
+        x: ball.x,
+        y: ball.y,
+      };
+
+      if (ball.x < BALL_RADIUS) {
+        mirrorBall.x = canvas.width + ball.x;
+      }
+      else if (canvas.width - 1 - ball.x < BALL_RADIUS) {
+        mirrorBall.x = -(canvas.width - 1 - ball.x);
+      }
+
+      if (ball.y < BALL_RADIUS) {
+        mirrorBall.y = canvas.height + ball.y;
+      }
+      else if (canvas.height - 1 - ball.y < BALL_RADIUS) {
+        mirrorBall.y = -(canvas.height - 1 - ball.y);
+      }
+
+      if (mirrorBall.x !== ball.x || mirrorBall.y !== ball.y) {
+        ctx.beginPath();
+        ctx.arc(mirrorBall.x, mirrorBall.y, BALL_RADIUS, 0, Math.PI * 2, false);
+        ctx.fillStyle = ball.ballColor;
+        ctx.fill();
+        ctx.closePath();
+      }
     }
 
     function drawSquares() {
@@ -177,6 +210,22 @@
             SQUARE_SIZE
           );
         }
+      }
+    }
+
+    function updatePointForInfinityCanvas(p) {
+      if (p.x < 0) {
+        p.x = canvas.width - 1 - (-p.x);
+      }
+      else if (p.x >= canvas.width) {
+        p.x %= canvas.width - 1;
+      }
+
+      if (p.y < 0) {
+        p.y = canvas.height - 1 - (-p.y);
+      }
+      else if (p.y >= canvas.height) {
+        p.y %= canvas.height - 1;
       }
     }
 
@@ -338,10 +387,7 @@
                 ? Math.ceil(check.y) - 1
                 : Math.floor(check.y);
 
-        // boundary collision
-        if (check.x < 0 || check.x >= canvas.width || check.y < 0 || check.y >= canvas.height) {
-          angleCols.push(angleCheck);
-        }
+        updatePointForInfinityCanvas(check);
 
         check.sx = Math.floor(check.x / SQUARE_SIZE);
         check.sy = Math.floor(check.y / SQUARE_SIZE);
@@ -436,6 +482,8 @@
           updateSquareAndBounce(ball);
           ball.x += ball.dx;
           ball.y += ball.dy;
+
+          updatePointForInfinityCanvas(ball);
         });
       }
 
