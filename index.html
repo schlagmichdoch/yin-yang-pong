@@ -96,9 +96,11 @@
     const scoreElement = document.getElementById("score");
 
     const DAY_COLOR = colorPalette.MysticMint;
-    const DAY_BALL_COLOR = colorPalette.NocturnalExpedition;
     const NIGHT_COLOR = colorPalette.NocturnalExpedition;
-    const NIGHT_BALL_COLOR = colorPalette.MysticMint;
+    const FLIPPER_COLOR = colorPalette.DeepSaffron;
+
+    const DAY_BALL_COLOR = NIGHT_COLOR;
+    const NIGHT_BALL_COLOR = DAY_COLOR;
 
     const SPEED = 10;
     const SQUARE_SIZE = 30; // must be an even integer and a factor of the canvas size
@@ -134,6 +136,10 @@
       }
     }
 
+    // Add flipper
+    squares[0][0] = FLIPPER_COLOR;
+    squares[numSquaresX-1][numSquaresY-1] = FLIPPER_COLOR;
+
     const balls = [
       {
         x: canvas.width / 4,
@@ -141,13 +147,15 @@
         angle: 1.7, // radians [0, 2)
         color: DAY_COLOR,
         ballColor: DAY_BALL_COLOR,
+        fire: false
       },
       {
         x: (canvas.width / 4) * 3,
         y: canvas.height / 2,
-        angle: 0.8, // radians [0, 2)
+        angle: 1.2, // radians [0, 2)
         color: NIGHT_COLOR,
         ballColor: NIGHT_BALL_COLOR,
+        fire: false
       }
     ];
 
@@ -161,9 +169,17 @@
     function drawBall(ball) {
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2, false);
-      ctx.fillStyle = ball.ballColor;
+      ctx.fillStyle = ball.fire ? FLIPPER_COLOR : ball.ballColor;
       ctx.fill();
       ctx.closePath();
+
+      if (ball.fire) {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, BALL_RADIUS / 2, 0, Math.PI * 2, false);
+        ctx.fillStyle = ball.ballColor;
+        ctx.fill();
+        ctx.closePath();
+      }
     }
 
     function drawSquares() {
@@ -178,6 +194,17 @@
           );
         }
       }
+    }
+
+    function activateFireball(ball) {
+      ball.fire = true;
+      clearTimeout(ball.fireTimeout);
+      ball.fireTimeout = setTimeout(() => deactivateFireball(ball), 1000);
+    }
+
+    function deactivateFireball(ball) {
+      clearTimeout(ball.fireTimeout);
+      ball.fire = false;
     }
 
     function calculateDistance(p1, p2) {
@@ -347,11 +374,19 @@
         check.sy = Math.floor(check.y / SQUARE_SIZE);
 
         if (squares[check.sx] && squares[check.sx][check.sy] && squares[check.sx][check.sy] !== ball.color) {
-          // Do not flip square if any other ball is inside square
-          if (!isAnyOtherBallInSquare(ball, check)) {
-            squaresToFlip.push(check);
+          if (squares[check.sx][check.sy] === FLIPPER_COLOR) {
+            activateFireball(ball);
+
+            angleCols.push(angleCheck);
           }
-          angleCols.push(angleCheck);
+          else if (!isAnyOtherBallInSquare(ball, check)) {
+            // Do not flip square if any other ball is inside square
+            squaresToFlip.push(check);
+
+            if (!ball.fire) {
+              angleCols.push(angleCheck);
+            }
+          }
         }
       }
 
