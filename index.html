@@ -376,12 +376,15 @@
             angleCols.push(angleCheck);
           }
           else if (!isAnyOtherBallInSquare(ball, check)) {
-            // Do not flip square if any other ball is inside square
             squaresToFlip.push(check);
 
             if (!ball.fire) {
               angleCols.push(angleCheck);
             }
+          }
+          else {
+            // Do not flip square if any other ball is inside square but always reflect ball
+            angleCols.push(angleCheck);
           }
         }
       }
