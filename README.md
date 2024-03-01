@@ -4,7 +4,7 @@ It's the eternal battle between day and night - good and bad - with the power of
 
 Written in JavaScript with some HTML & CSS in one index.html. Feel free to reuse the code and create your own version.
 
-https://github.com/vnglst/pong-wars/assets/3457693/4eae12fa-bdc1-49ee-8b39-c94deb7cb2c8
+https://github.com/schlagmichdoch/yin-yang-pong/assets/52242352/b5f63cb5-966f-4023-8fdd-5f2fe5d2056a
 
 ## Development
 
