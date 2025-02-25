@@ -114,6 +114,8 @@
     const numSquaresX = canvas.width / SQUARE_SIZE;
     const numSquaresY = canvas.height / SQUARE_SIZE;
 
+    const sqrt_two = Math.sqrt(2);
+
     const squares = [];
 
     const scores = [];
@@ -162,8 +164,7 @@
           y: canvas.height / 2
         };
 
-        let distance = calculateDistance(squareRef, circleCenter);
-        if (distance <= canvas.width / 2) {
+        if (distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 2)) {
           if (
                   (j < Math.ceil(numSquaresY / 2) && i < Math.floor(numSquaresX / 2) + 1)
                   || (j >= Math.ceil(numSquaresY / 2) && i < numSquaresX / 2 - 1)
@@ -198,9 +199,10 @@
           y: canvas.height / 4
         };
 
-        let distance = calculateDistance(squareRef, circleCenter);
-
-        if (squares[i][j] === YANG_COLOR && distance <= canvas.width / 4 - 1) {
+        if (
+                squares[i][j] === YANG_COLOR
+                && distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 4 - 1)
+        ) {
           squares[i][j] = YIN_COLOR;
           scores[YIN_COLOR]++;
           scores[YANG_COLOR]--;
@@ -224,9 +226,10 @@
           y: 3 * canvas.height / 4
         };
 
-        let distance = calculateDistance(squareRef, circleCenter);
-
-        if (squares[i][j] === YIN_COLOR && distance <= canvas.width / 4 - 1) {
+        if (
+                squares[i][j] === YIN_COLOR
+                && distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 4 - 1)
+        ) {
           squares[i][j] = YANG_COLOR;
           scores[YANG_COLOR]++;
           scores[YIN_COLOR]--;
@@ -259,20 +262,26 @@
       }
     }
 
-    function calculateDistance(p1, p2) {
-      return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    function distanceLessOrEqualD(p1, p2, d) {
+      return calculateDistanceSquared(p1, p2) <= d * d;
     }
 
-    function getRoundedAngle(angle) {
-      return Math.round(1_000_000 * angle) / 1_000_000;
+    function calculateDistanceSquared(p1, p2) {
+      let dx = p2.x - p1.x;
+      let dy = p2.y - p1.y;
+      return dx * dx + dy * dy;
+    }
+
+    function roundToSixDigits(x) {
+      return Math.round(1_000_000 * x) / 1_000_000
     }
 
     function calculateDxFromAngle(angle) {
-      return Math.round(Math.sqrt(2) * Math.cos(angle * Math.PI) * 1_000_000) / 1_000_000;
+      return roundToSixDigits(sqrt_two * Math.cos(angle * Math.PI));
     }
 
     function calculateDyFromAngle(angle) {
-      return Math.round(Math.sqrt(2) * Math.sin(angle * Math.PI) * 1_000_000) / 1_000_000;
+      return roundToSixDigits(sqrt_two * Math.sin(angle * Math.PI));
     }
 
     function isAnyOtherBallInSquare(thisBall, square) {
@@ -325,10 +334,10 @@
         // Ball must be in diagonally neighboring square
         // Check if the distance to any of the corner points of the square is closer than the ball radius -> overlap
         if (
-                calculateDistance(ball, square) <= BALL_RADIUS
-                || calculateDistance(ball, { x: square.x + SQUARE_SIZE, y: square.y }) <= BALL_RADIUS
-                || calculateDistance(ball, { x: square.x, y: square.y + SQUARE_SIZE }) <= BALL_RADIUS
-                || calculateDistance(ball, { x: square.x + SQUARE_SIZE, y: square.y + SQUARE_SIZE }) <= BALL_RADIUS
+                distanceLessOrEqualD(ball,    square,                                                    BALL_RADIUS)
+                || distanceLessOrEqualD(ball, { x: square.x + SQUARE_SIZE,  y: square.y },               BALL_RADIUS)
+                || distanceLessOrEqualD(ball, { x: square.x,                y: square.y + SQUARE_SIZE }, BALL_RADIUS)
+                || distanceLessOrEqualD(ball, { x: square.x + SQUARE_SIZE,  y: square.y + SQUARE_SIZE }, BALL_RADIUS)
         ) {
           return true;
         }
@@ -370,7 +379,7 @@
         };
 
         // check if near border
-        if (calculateDistance(square, canvasCenter) > canvas.width / 2 - SQUARE_SIZE) {
+        if (!distanceLessOrEqualD(square, canvasCenter, canvas.width / 2 - SQUARE_SIZE)) {
           return true;
         }
 
@@ -393,7 +402,7 @@
       let squaresToFlip = [];
 
       // Check multiple points around the ball's circumference
-      for (let i = 0; angleCheck < 2; angleCheck = getRoundedAngle(++i * anglePerPixel)) {
+      for (let i = 0; angleCheck < 2; angleCheck = roundToSixDigits(++i * anglePerPixel)) {
         let angleCheckDiff = ball.angle - angleCheck;
 
         // angles must be in range [0,2)
@@ -426,7 +435,7 @@
         };
 
         // boundary collision
-        if (calculateDistance(check, canvasCenter) > canvas.width / 2) {
+        if (!distanceLessOrEqualD(check, canvasCenter, canvas.width / 2)) {
           angleCols.push(angleCheck);
         }
 
@@ -459,8 +468,8 @@
           angleColsSum += angleCol;
         }
 
-        let angleColsMean = getRoundedAngle(angleColsSum / angleCols.length);
-        let angleDiffsMean = getRoundedAngle(angleColsMean - ball.angle);
+        let angleColsMean = roundToSixDigits(angleColsSum / angleCols.length);
+        let angleDiffsMean = roundToSixDigits(angleColsMean - ball.angle);
 
         let angleColsInverted = angleColsMean + 1;
 
@@ -469,7 +478,7 @@
           angleColsInverted -= 2;
         }
 
-        angleReflection = getRoundedAngle(angleColsInverted + angleDiffsMean);
+        angleReflection = roundToSixDigits(angleColsInverted + angleDiffsMean);
 
         // angles must be in range [0,2)
         while (angleReflection >= 2) {
