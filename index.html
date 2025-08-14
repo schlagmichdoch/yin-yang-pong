@@ -1,548 +1,530 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Yin-Yang Pong</title>
     <meta
-      name="description"
-      content="The eternal battle between yin and yang, bad in good vs. good in bad. Written in JavaScript with some HTML & CSS in one index.html. Feel free to reuse the code and create your own version."
+            name="description"
+            content="The eternal battle between yin and yang, bad in good vs. good in bad. Written in JavaScript with some HTML & CSS in one index.html. Feel free to reuse the code and create your own version."
     />
-    <link rel="canonical" href="https://yin-yang-pong.vercel.app/" />
-    <link rel="author" href="https://github.com/schlagmichdoch" />
-    <meta name="theme-color" content="#172B36" />
-    <meta name="creator" content="schlagmichdoch" />
+    <link rel="canonical" href="https://pong-wars-fireballs.vercel.app/"/>
+    <link rel="author" href="https://github.com/schlagmichdoch"/>
+    <meta name="theme-color" content="#172B36"/>
+    <meta name="creator" content="schlagmichdoch"/>
     <style>
-      html {
-        height: 100%;
-      }
+        html {
+            height: 100%;
+        }
 
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(to bottom, #172b36 0%, #d9e8e3 100%);
-      }
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to bottom, #172b36 0%, #d9e8e3 100%);
+        }
 
-      #container {
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        width: min(70vh, 80%);
-        max-width: 600px;
-        height: 100%;
-      }
+        #container {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            width: min(70vh, 80%);
+            max-width: 600px;
+            height: 100%;
+        }
 
-      canvas {
-        display: block;
-        border-radius: 50%;
-        overflow: hidden;
-        width: 100%;
-        margin-top: auto;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-      }
+        canvas {
+            display: block;
+            border-radius: 50%;
+            overflow: hidden;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
 
-      #score {
-        font-family: monospace;
-        margin-top: 30px;
-        font-size: 16px;
-        padding-left: 20px;
-        color: #172b36;
-      }
+        #score {
+            font-family: monospace;
+            margin-top: 30px;
+            font-size: 16px;
+            padding-left: 20px;
+            color: #172b36;
+        }
 
-      #made {
-        text-align: center;
-        line-height: 1.5;
-        font-family: monospace;
-        margin-top: auto;
-        margin-bottom: 20px;
-        font-size: 10px;
-      }
+        #made {
+            text-align: center;
+            line-height: 1.5;
+            font-family: monospace;
+            margin-top: auto;
+            margin-bottom: 20px;
+            font-size: 10px;
+        }
 
-      #made a {
-        color: #172b36;
-      }
+        #made a {
+            color: #172b36;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
-    <div id="container">
-      <canvas id="pongCanvas" width="690" height="690"></canvas>
-      <div id="score"></div>
-      <p id="made">
+<body>
+<div id="container">
+    <canvas id="pongCanvas" width="690" height="690"></canvas>
+    <div id="score"></div>
+    <p id="made">
         made by <a href="https://github.com/schlagmichdoch">schlagmichdoch</a> | source on
-        <a href="https://github.com/schlagmichdoch/yin-yang-pong">github</a> | based on <a href="https://pong-wars.koenvangilst.nl/">pong-wars</a>
-      </p>
-    </div>
-  </body>
+        <a href="https://github.com/schlagmichdoch/yin-yang-pong">github</a> | based on <a
+            href="https://pong-wars.koenvangilst.nl/">pong-wars</a>
+    </p>
+</div>
+</body>
 
-  <script>
+<script>
     // Source palette: https://twitter.com/AlexCristache/status/1738610343499157872
     // Idea for Pong wars: https://twitter.com/nicolasdnl/status/1749715070928433161
 
-    const colorPalette = {
-      ArcticPowder: "#F1F6F4",
-      MysticMint: "#D9E8E3",
-      Forsythia: "#FFC801",
-      DeepSaffron: "#FF9932",
-      NocturnalExpedition: "#114C5A",
-      OceanicNoir: "#172B36",
+    const COLOR_PALETTE = {
+        arctic_powder: "#F1F6F4",
+        mystic_mint: "#D9E8E3",
+        forsythia: "#FFC801",
+        deep_saffron: "#FF9932",
+        nocturnal_expedition: "#114C5A",
+        oceanic_noir: "#172B36",
     };
 
     const canvas = document.getElementById("pongCanvas");
     const ctx = canvas.getContext("2d");
-    const scoreElement = document.getElementById("score");
+    const score_element = document.getElementById("score");
 
-    const YIN_COLOR = colorPalette.MysticMint;
-    const YIN_BALL_COLOR = colorPalette.NocturnalExpedition;
+    const YIN_COLOR = COLOR_PALETTE.mystic_mint;
+    const YIN_BALL_COLOR = COLOR_PALETTE.nocturnal_expedition;
 
-    const YANG_COLOR = colorPalette.NocturnalExpedition;
-    const YANG_BALL_COLOR = colorPalette.MysticMint;
+    const YANG_COLOR = COLOR_PALETTE.nocturnal_expedition;
+    const YANG_BALL_COLOR = COLOR_PALETTE.mystic_mint;
 
     const SPEED = 10;
     const SQUARE_SIZE = 30; // must be an even integer and a factor of the canvas size
 
     const BALL_RADIUS = SQUARE_SIZE / 2;
-    const BALL_CIRCUMFERENCE = 2 * Math.PI * BALL_RADIUS;
 
-    // Use diameter to ensure each pixel around the circumference is checked at least once
-    // Calculate next bigger power of 2 of diameter to ensure relevant angles (0, 1/4, 1/2, 3/4, 1, 5/4, 3/2, 7/4) are always checked
-    let anglePerPixel = 1 / Math.pow(2, Math.ceil(Math.log2(BALL_CIRCUMFERENCE)));
+    const NUM_SQUARES_X = canvas.width / SQUARE_SIZE;
+    const NUM_SQUARES_Y = canvas.height / SQUARE_SIZE;
 
-    const numSquaresX = canvas.width / SQUARE_SIZE;
-    const numSquaresY = canvas.height / SQUARE_SIZE;
+    const SCORES = [];
+    SCORES[YIN_COLOR] = 0;
+    SCORES[YANG_COLOR] = 0;
 
-    const sqrt_two = Math.sqrt(2);
+    const SQUARES = [];
 
-    const squares = [];
-
-    const scores = [];
-    scores[YIN_COLOR] = 0;
-    scores[YANG_COLOR] = 0;
-
-    const balls = [
-      {
-        x: canvas.width / 2,
-        y: canvas.height / 4,
-        angle: 2 * Math.random() / 3 - 1 / 3 + 1, // radians [2/3, 4/3)
-        color: YIN_COLOR,
-        ballColor: YIN_BALL_COLOR,
-      },
-      {
-        x: canvas.width / 2,
-        y: 3 * canvas.height / 4,
-        angle: 2 * Math.random() / 3 - 1 / 3, // radians [-1/3, 1/3)
-        color: YANG_COLOR,
-        ballColor: YANG_BALL_COLOR,
-      }
-    ];
-
-    balls.forEach((ball) => {
-      ball.dx = calculateDxFromAngle(ball.angle);
-      ball.dy = calculateDyFromAngle(ball.angle);
-    });
-
-    let iteration = 0;
+    let steps = 0;
 
     // Populate the fields with Yin-Yang pattern
-    for (let i = 0; i < numSquaresX; i++) {
-      squares[i] = [];
-      for (let j = 0; j < numSquaresY; j++) {
-        let squareRef = {
-          x: i < Math.floor(numSquaresX / 2)
-                  ? i * SQUARE_SIZE + SQUARE_SIZE
-                  : i * SQUARE_SIZE,
-          y: j < Math.floor(numSquaresY / 2)
-                  ? j * SQUARE_SIZE + SQUARE_SIZE
-                  : j * SQUARE_SIZE
-        };
+    for (let i = 0; i < NUM_SQUARES_X; i++) {
+        SQUARES[i] = [];
+        for (let j = 0; j < NUM_SQUARES_Y; j++) {
+            let square_ref = {
+                x: i < Math.floor(NUM_SQUARES_X / 2)
+                    ? (i + 1) * SQUARE_SIZE
+                    : i * SQUARE_SIZE,
+                y: j < Math.floor(NUM_SQUARES_Y / 2)
+                    ? (j + 1) * SQUARE_SIZE
+                    : j * SQUARE_SIZE
+            };
 
-        let circleCenter = {
-          x: canvas.width / 2,
-          y: canvas.height / 2
-        };
+            let circle_center = {
+                x: canvas.width / 2 - 1,
+                y: canvas.height / 2 - 1
+            };
 
-        if (distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 2)) {
-          if (
-                  (j < Math.ceil(numSquaresY / 2) && i < Math.floor(numSquaresX / 2) + 1)
-                  || (j >= Math.ceil(numSquaresY / 2) && i < numSquaresX / 2 - 1)
-          ) {
-            squares[i][j] = YIN_COLOR;
-            scores[YIN_COLOR]++;
-          }
-          else {
-            squares[i][j] = YANG_COLOR;
-            scores[YANG_COLOR]++;
-          }
+            if (xy_seq_d(square_ref.x - circle_center.x, square_ref.y - circle_center.y, canvas.width / 2)) {
+                if (
+                    (j < Math.ceil(NUM_SQUARES_Y / 2) && i < Math.floor(NUM_SQUARES_X / 2) + 1)
+                    || (j >= Math.ceil(NUM_SQUARES_Y / 2) && i < NUM_SQUARES_X / 2 - 1)
+                ) {
+                    SQUARES[i][j] = YIN_COLOR;
+                    SCORES[YIN_COLOR]++;
+                } else {
+                    SQUARES[i][j] = YANG_COLOR;
+                    SCORES[YANG_COLOR]++;
+                }
+            } else {
+                SQUARES[i][j] = false;
+            }
         }
-        else {
-          squares[i][j] = false;
-        }
-      }
     }
 
-    for (let i = Math.floor(numSquaresX / 2); i < Math.floor(3 * numSquaresX / 4); i++) {
-      for (let j = 0; j < Math.floor(numSquaresY / 2); j++) {
-        let squareRef = {
-          x: i < Math.floor(numSquaresX / 2)
-                ? i * SQUARE_SIZE + SQUARE_SIZE
-                : i * SQUARE_SIZE,
-          y: j < Math.floor(numSquaresX / 2)
-                ? j * SQUARE_SIZE + SQUARE_SIZE
-                : j * SQUARE_SIZE
-        };
+    for (let i = Math.floor(NUM_SQUARES_X / 2); i < Math.floor(3 * NUM_SQUARES_X / 4); i++) {
+        for (let j = 0; j < Math.floor(NUM_SQUARES_Y / 2); j++) {
+            let square_ref = {
+                x: i < Math.floor(NUM_SQUARES_X / 2)
+                    ? i * SQUARE_SIZE + SQUARE_SIZE
+                    : i * SQUARE_SIZE,
+                y: j < Math.floor(NUM_SQUARES_X / 2)
+                    ? j * SQUARE_SIZE + SQUARE_SIZE
+                    : j * SQUARE_SIZE
+            };
 
-        let circleCenter = {
-          x: canvas.width / 2,
-          y: canvas.height / 4
-        };
+            let circle_center = {
+                x: canvas.width / 2,
+                y: canvas.height / 4
+            };
 
-        if (
-                squares[i][j] === YANG_COLOR
-                && distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 4 - 1)
-        ) {
-          squares[i][j] = YIN_COLOR;
-          scores[YIN_COLOR]++;
-          scores[YANG_COLOR]--;
+            if (
+                SQUARES[i][j] === YANG_COLOR
+                && xy_seq_d(square_ref.x - circle_center.x, square_ref.y - circle_center.y, canvas.width / 4 - 1)
+            ) {
+                SQUARES[i][j] = YIN_COLOR;
+                SCORES[YIN_COLOR]++;
+                SCORES[YANG_COLOR]--;
+            }
         }
-      }
     }
 
-    for (let i = Math.ceil(numSquaresX / 2) - 1; i > Math.ceil(numSquaresX / 4) - 1; i--) {
-      for (let j = Math.floor(numSquaresY / 2); j < numSquaresY; j++) {
-        let squareRef = {
-          x: i < Math.floor(numSquaresX / 2)
-                  ? i * SQUARE_SIZE + SQUARE_SIZE
-                  : i * SQUARE_SIZE,
-          y: j < Math.floor(numSquaresX / 2)
-                  ? j * SQUARE_SIZE + SQUARE_SIZE
-                  : j * SQUARE_SIZE
-        };
+    for (let i = Math.ceil(NUM_SQUARES_X / 2) - 1; i > Math.ceil(NUM_SQUARES_X / 4) - 1; i--) {
+        for (let j = Math.floor(NUM_SQUARES_Y / 2); j < NUM_SQUARES_Y; j++) {
+            let square_ref = {
+                x: i < Math.floor(NUM_SQUARES_X / 2)
+                    ? i * SQUARE_SIZE + SQUARE_SIZE
+                    : i * SQUARE_SIZE,
+                y: j < Math.floor(NUM_SQUARES_X / 2)
+                    ? j * SQUARE_SIZE + SQUARE_SIZE
+                    : j * SQUARE_SIZE
+            };
 
-        let circleCenter = {
-          x: canvas.width / 2,
-          y: 3 * canvas.height / 4
-        };
+            let circle_center = {
+                x: canvas.width / 2,
+                y: 3 * canvas.height / 4
+            };
 
-        if (
-                squares[i][j] === YIN_COLOR
-                && distanceLessOrEqualD(squareRef, circleCenter, canvas.width / 4 - 1)
-        ) {
-          squares[i][j] = YANG_COLOR;
-          scores[YANG_COLOR]++;
-          scores[YIN_COLOR]--;
+            if (
+                SQUARES[i][j] === YIN_COLOR
+                && xy_seq_d(square_ref.x - circle_center.x, square_ref.y - circle_center.y, canvas.width / 4 - 1)
+            ) {
+                SQUARES[i][j] = YANG_COLOR;
+                SCORES[YANG_COLOR]++;
+                SCORES[YIN_COLOR]--;
+            }
         }
-      }
     }
 
-    function drawBall(ball) {
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2, false);
-      ctx.fillStyle = ball.ballColor;
-      ctx.fill();
+    const BALLS = [
+        {
+            x: canvas.width / 2,
+            y: canvas.height / 4,
+            angle: 2 * Math.random() / 3 - 1 / 3 + 1, // radians [-1/3, 1/3)
+            color: YIN_COLOR,
+            ball_color: YIN_BALL_COLOR,
+        },
+        {
+            x: canvas.width / 2,
+            y: canvas.height - BALL_RADIUS - 1,
+            angle: 0, // radians [2/3, 4/3)
+            color: YANG_COLOR,
+            ball_color: YANG_BALL_COLOR,
+        }
+    ];
+
+    BALLS.forEach((ball) => {
+        ball.dx = calc_dx_from_angle(ball.angle);
+        ball.dy = calc_dy_from_angle(ball.angle);
+        update_ball(ball);
+    });
+
+    function update_ball(ball) {
+        ball.sx = Math.floor(ball.x / SQUARE_SIZE);
+        ball.sy = Math.floor(ball.y / SQUARE_SIZE);
     }
 
-    function drawSquares() {
-      for (let i = 0; i < numSquaresX; i++) {
-        for (let j = 0; j < numSquaresY; j++) {
-          if (squares[i][j]) {
-            ctx.beginPath();
-            ctx.fillStyle = squares[i][j];
-            ctx.rect(
+    function move_ball(ball) {
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+    }
+
+    function draw_ball(ball) {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2, false);
+        ctx.fillStyle = ball.ball_color;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    function draw_squares() {
+        for (let i = 0; i < NUM_SQUARES_X; i++) {
+            for (let j = 0; j < NUM_SQUARES_Y; j++) {
+                ctx.fillStyle = SQUARES[i][j];
+                ctx.fillRect(
                     i * SQUARE_SIZE,
                     j * SQUARE_SIZE,
                     SQUARE_SIZE,
                     SQUARE_SIZE
-            );
-            ctx.fill();
-          }
+                );
+            }
         }
-      }
     }
 
-    function distanceLessOrEqualD(p1, p2, d) {
-      return calculateDistanceSquared(p1, p2) <= d * d;
+    function round_to_six_digits(x) {
+        return Math.round(1_000_000 * x) / 1_000_000
     }
 
-    function calculateDistanceSquared(p1, p2) {
-      let dx = p2.x - p1.x;
-      let dy = p2.y - p1.y;
-      return dx * dx + dy * dy;
+    function calc_dx_from_angle(angle) {
+        return round_to_six_digits(Math.cos(angle * Math.PI));
     }
 
-    function roundToSixDigits(x) {
-      return Math.round(1_000_000 * x) / 1_000_000
+    function calc_dy_from_angle(angle) {
+        return round_to_six_digits(Math.sin(angle * Math.PI));
     }
 
-    function calculateDxFromAngle(angle) {
-      return roundToSixDigits(sqrt_two * Math.cos(angle * Math.PI));
-    }
+    function is_any_other_ball_in_square(this_ball, square) {
+        for (let i = 0; i < BALLS.length; i++) {
+            let ball = BALLS[i];
 
-    function calculateDyFromAngle(angle) {
-      return roundToSixDigits(sqrt_two * Math.sin(angle * Math.PI));
-    }
+            // Do not check this ball
+            if (ball.color === this_ball.color) continue;
 
-    function isAnyOtherBallInSquare(thisBall, square) {
-      // If this ball and square   this is the exclusion zone.
-      // ---bb------------------   ---------------------------
-      // --bbbb-----------------   ---------------------------
-      // --bbbb-----------------   --------######-------------
-      // ---bb------------------   -------########------------
-      // ---------ssss----------   -------##ssss##------------
-      // ---------ssss----------   -------##ssss##------------
-      // ---------ssss----------   -------##ssss##------------
-      // ---------ssss----------   -------##ssss##------------
-      // -----------------------   -------########------------
-      // -----------------------   --------######-------------
-      // -----------------------   ---------------------------
+            square.distance_x = get_distance_x(ball, square);
+            square.distance_y = get_distance_y(ball, square);
 
-      square.x = square.sx * SQUARE_SIZE;
-      square.y = square.sy * SQUARE_SIZE;
-
-      for (let i = 0; i < balls.length; i++) {
-        let ball = balls[i];
-
-        // Do not check this ball
-        if (ball.color === thisBall.color) continue;
-
-        ball.sx = Math.floor(ball.x / SQUARE_SIZE);
-        ball.sy = Math.floor(ball.y / SQUARE_SIZE);
-
-        // Check if ball is inside square
-        if (ball.sx === square.sx && ball.sy === square.sy) {
-          return true;
+            // ball is in square if distance is less than ball radius
+            if (xy_s_d(square.distance_x, square.distance_y, BALL_RADIUS)) {
+                return true;
+            }
         }
 
-        // Check if ball is more than one square away
-        if (Math.abs(ball.sx - square.sx) > 1 || Math.abs(ball.sy - square.sy) > 1) {
-          // is not in square -> check next ball
-          continue;
-        }
-
-        // Check if ball is inside orthogonally neighboring square and closer than one radius to the according edge of this square
-        if (
-                (square.sx - ball.sx === 1 && square.x - ball.x <= BALL_RADIUS)                   // Left neighbor
-                || (square.sy - ball.sy === 1 && square.y - ball.y <= BALL_RADIUS)                   // Top neighbor
-                || (ball.sx - square.sx === 1 && ball.x - (square.x + SQUARE_SIZE) <= BALL_RADIUS)   // Right neighbor
-                || (ball.sy - square.sy === 1 && ball.y - (square.y + SQUARE_SIZE) <= BALL_RADIUS)   // Bottom neighbor
-        ) {
-          return true;
-        }
-
-        // Ball must be in diagonally neighboring square
-        // Check if the distance to any of the corner points of the square is closer than the ball radius -> overlap
-        if (
-                distanceLessOrEqualD(ball,    square,                                                    BALL_RADIUS)
-                || distanceLessOrEqualD(ball, { x: square.x + SQUARE_SIZE,  y: square.y },               BALL_RADIUS)
-                || distanceLessOrEqualD(ball, { x: square.x,                y: square.y + SQUARE_SIZE }, BALL_RADIUS)
-                || distanceLessOrEqualD(ball, { x: square.x + SQUARE_SIZE,  y: square.y + SQUARE_SIZE }, BALL_RADIUS)
-        ) {
-          return true;
-        }
-      }
-
-      // No ball is in square
-      return false;
+        // No ball is in square
+        return false;
     }
 
-    function nearSquareCandidateOrBorder(ball) {
-      let ballSquare = {
-        sx: Math.floor(ball.x / SQUARE_SIZE),
-        sy: Math.floor(ball.y / SQUARE_SIZE)
-      };
-
-      // only next squares in direction of travel are candidates
-      let possibleSquares = [];
-      possibleSquares.push({
-        sx: ballSquare.sx + Math.sign(ball.dx),
-        sy: ballSquare.sy,
-      });
-      possibleSquares.push({
-        sx: ballSquare.sx,
-        sy: ballSquare.sy + Math.sign(ball.dy),
-      });
-      possibleSquares.push({
-        sx: ballSquare.sx + Math.sign(ball.dx),
-        sy: ballSquare.sy + Math.sign(ball.dy),
-      });
-
-      for (let i = 0; i < possibleSquares.length; i++) {
-        let square = possibleSquares[i];
+    function get_distance_x(ball, square) {
         square.x = square.sx * SQUARE_SIZE;
+        return square.x <= ball.x && ball.x < square.x + SQUARE_SIZE
+            ? 0
+            : Math.sign(square.x - ball.x) * Math.max(square.x - ball.x, ball.x - (square.x + SQUARE_SIZE));
+    }
+
+    function get_distance_y(ball, square) {
         square.y = square.sy * SQUARE_SIZE;
-
-        let canvasCenter = {
-          x: canvas.width / 2 - 1,
-          y: canvas.height / 2 - 1
-        };
-
-        // check if near border
-        if (!distanceLessOrEqualD(square, canvasCenter, canvas.width / 2 - SQUARE_SIZE)) {
-          return true;
-        }
-
-        // check if square is of other color
-        if (!squares[square.sx] || !squares[square.sx][square.sy] || squares[square.sx][square.sy] !== ball.color) {
-          return true;
-        }
-      }
-
-      return false;
+        return square.y <= ball.y && ball.y < square.y + SQUARE_SIZE
+            ? 0
+            : Math.sign(square.y - ball.y) * Math.max(square.y - ball.y, ball.y - (square.y + SQUARE_SIZE));
     }
 
-    function updateSquareAndBounce(ball) {
-      let dxUpdated = ball.dx;
-      let dyUpdated = ball.dy;
-      let angleUpdated = ball.angle;
+    function xy_seq_d(x, y, d) {
+        return x * x + y * y <= d * d;
+    }
 
-      let angleCheck = 0;
-      let angleCols = [];
-      let squaresToFlip = [];
+    function xy_s_d(x, y, d) {
+        return x * x + y * y < d * d;
+    }
 
-      // Check multiple points around the ball's circumference
-      for (let i = 0; angleCheck < 2; angleCheck = roundToSixDigits(++i * anglePerPixel)) {
-        let angleCheckDiff = ball.angle - angleCheck;
+    function get_cols_squares(ball) {
+        let squares_collision_candidates = [];
+        let squares_collision = [];
+
+        // add all squares around ball square as collision candidates
+        squares_collision_candidates.push(
+            {sx: ball.sx - 1, sy: ball.sy - 1},
+            {sx: ball.sx - 1, sy: ball.sy},
+            {sx: ball.sx - 1, sy: ball.sy + 1},
+            {sx: ball.sx, sy: ball.sy - 1},
+            {sx: ball.sx, sy: ball.sy + 1},
+            {sx: ball.sx + 1, sy: ball.sy - 1},
+            {sx: ball.sx + 1, sy: ball.sy},
+            {sx: ball.sx + 1, sy: ball.sy + 1}
+        )
+
+
+        for (let i = 0; i < squares_collision_candidates.length; i++) {
+            let square = squares_collision_candidates[i];
+
+            // check if square is out of border
+            if (!SQUARES[square.sx] || !SQUARES[square.sx][square.sy]) {
+                continue;
+            }
+
+            // check if square is of same color
+            if (SQUARES[square.sx][square.sy] === ball.color) {
+                continue;
+            }
+
+            square.distance_x = get_distance_x(ball, square);
+            square.distance_y = get_distance_y(ball, square);
+
+            if (xy_seq_d(square.distance_x, square.distance_y, BALL_RADIUS)) {
+                squares_collision.push(square);
+            }
+        }
+        return squares_collision;
+    }
+
+    function calc_cols_ang(ball, square) {
+        if (square.distance_x === 0 && square.distance_y === 0) {
+            // collision angle = velocity angle
+            return ball.angle;
+        }
+        if (square.distance_y === 0) {
+            // collision angle = ex * sign(dx)
+            return -(1 / 2) * Math.sign(square.distance_x) + 1 / 2;
+        }
+        if (square.distance_x === 0) {
+            // collision angle = ey * sign(dy)
+            return -(1 / 2) * Math.sign(square.distance_y) + 1;
+        }
+        // collision angle = angle of distance
+        // angle between distance_x and distance_y from atan (-0.5, 0.5)
+        let col_ang = -round_to_six_digits(Math.atan(-square.distance_y / square.distance_x) / Math.PI);
+
+        // if collision is left we must add 180 degrees
+        if (Math.sign(square.distance_x) === -1) {
+            col_ang += 1;
+        }
 
         // angles must be in range [0,2)
-        if (Math.sign(angleCheckDiff) === -1) {
-          angleCheckDiff += 2;
+        if (col_ang < 0) {
+            col_ang += 2;
         }
+        return col_ang;
+    }
 
-        // Only check angles in vector direction
-        if (angleCheckDiff >= 1 / 2 && angleCheckDiff <= 3 / 2) continue;
-
-        // check is one out of circle
-        let check = {
-          x: ball.x + Math.cos(angleCheck * Math.PI) * BALL_RADIUS,
-          y: ball.y + Math.sin(angleCheck * Math.PI) * BALL_RADIUS
+    function get_boundary_collision_angles(ball) {
+        let circle_center = {
+            x: canvas.width / 2 - 1,
+            y: canvas.height / 2 - 1
         };
 
-        // Depending on which side of the circle we are, we need to round decimal pixels either up or down
-        // On left and top side of circle we need to reduce by one more to check potential next square.
-        check.x = angleCheck >= 1 / 2 && angleCheck < 3 / 2
-                ? Math.ceil(check.x) - 1
-                : Math.floor(check.x);
+        let distance_x = ball.x - circle_center.x;
+        let distance_y = ball.y - circle_center.y;
 
-        check.y = angleCheck >= 1 && angleCheck < 2
-                ? Math.ceil(check.y) - 1
-                : Math.floor(check.y);
-
-        let canvasCenter = {
-          x: canvas.width / 2 - 1,
-          y: canvas.height / 2 - 1
-        };
-
-        // boundary collision
-        if (!distanceLessOrEqualD(check, canvasCenter, canvas.width / 2)) {
-          angleCols.push(angleCheck);
+        if (xy_s_d(distance_x, distance_y, canvas.width / 2 - 1 - BALL_RADIUS)) {
+            return [];
         }
 
-        check.sx = Math.floor(check.x / SQUARE_SIZE);
-        check.sy = Math.floor(check.y / SQUARE_SIZE);
+        // collision angle = angle of distance
+        // angle between distance_x and distance_y from atan (-0.5, 0.5)
+        let angle_col = -round_to_six_digits(Math.atan(-distance_y / distance_x) / Math.PI);
 
-        if (squares[check.sx] && squares[check.sx][check.sy] && squares[check.sx][check.sy] !== ball.color) {
-          // Do not flip square if any other ball is inside square
-          if (!isAnyOtherBallInSquare(ball, check)) {
-            squaresToFlip.push(check);
-          }
-          angleCols.push(angleCheck);
+        // if collision is left we must add 180 degrees
+        if (Math.sign(distance_x) === -1) {
+            angle_col += 1;
         }
-      }
 
-      if (angleCols.length >= 1) {
+        // angles must be in range [0,2)
+        if (angle_col < 0) {
+            angle_col += 2;
+        }
+
+        return [angle_col];
+    }
+
+    function check_colls_and_bounce(ball) {
+        let angle_cols = [];
+        let squares_to_flip = [];
+
+        // Square Collisions
+        let squares_cols = get_cols_squares(ball);
+        for (let i = 0; i < squares_cols.length; i++) {
+            let square = squares_cols[i];
+            let angle_col = calc_cols_ang(ball, square);
+
+            if (!is_any_other_ball_in_square(ball, square)) {
+                squares_to_flip.push(square);
+                // Do not reflect if ball is on fire
+                if (!ball.fire) {
+                    angle_cols.push(angle_col);
+                }
+            } else {
+                // Do not flip square if any other ball is inside square but always reflect ball
+                angle_cols.push(angle_col);
+            }
+        }
+
+        // Boundary Collisions
+        angle_cols.push(...get_boundary_collision_angles(ball));
+
         // Determine bounce direction based on the collision angle
-        let angleReflection;
+        if (angle_cols.length >= 1) {
+            let angle_reflection;
 
-        // Multiple collisions must be combined by their mean difference
-        let angleColsSum = 0;
-        for (let i = 0; i < angleCols.length; i++) {
-          let angleCol = angleCols[i];
-          if (ball.angle < 0.5 && angleCol >= 1) {
-            angleCol -= 2;
-          }
-          else if (ball.angle >= 1.5 && angleCol < 1) {
-            angleCol += 2;
-          }
-          angleColsSum += angleCol;
+            // Multiple collisions must be combined by their mean difference
+            let angle_cols_sum = 0;
+            for (let i = 0; i < angle_cols.length; i++) {
+                let angle_col = angle_cols[i];
+
+                angle_cols_sum += angle_col;
+            }
+
+            let angle_cols_mean = round_to_six_digits(angle_cols_sum / angle_cols.length);
+            let angle_diffs_mean = round_to_six_digits(angle_cols_mean - ball.angle);
+
+            if (angle_diffs_mean >= 1) {
+                angle_diffs_mean -= 2;
+            }
+
+            // angles must be in range [0,2)
+            let angle_cols_inverted = angle_cols_mean < 1
+                ? angle_cols_mean + 1
+                : angle_cols_mean - 1;
+
+            angle_reflection = round_to_six_digits(angle_cols_inverted + angle_diffs_mean);
+
+            // angles must be in range [0,2)
+            while (angle_reflection >= 2) {
+                angle_reflection -= 2;
+            }
+
+            while (angle_reflection < 0) {
+                angle_reflection += 2;
+            }
+
+            ball.angle = angle_reflection;
+            ball.dx = calc_dx_from_angle(ball.angle);
+            ball.dy = calc_dy_from_angle(ball.angle);
         }
 
-        let angleColsMean = roundToSixDigits(angleColsSum / angleCols.length);
-        let angleDiffsMean = roundToSixDigits(angleColsMean - ball.angle);
+        // flip square color and change scores
+        for (let i = 0; i < squares_to_flip.length; i++) {
+            const square_color_old = SQUARES[squares_to_flip[i].sx][squares_to_flip[i].sy];
 
-        let angleColsInverted = angleColsMean + 1;
+            // ensure each square is only flipped once
+            if (square_color_old === ball.color) {
+                continue;
+            }
 
-        // angles must be in range [0,2)
-        if (angleColsInverted >= 2) {
-          angleColsInverted -= 2;
+            SQUARES[squares_to_flip[i].sx][squares_to_flip[i].sy] = ball.color;
+
+            SCORES[ball.color]++;
+            SCORES[square_color_old]--;
         }
-
-        angleReflection = roundToSixDigits(angleColsInverted + angleDiffsMean);
-
-        // angles must be in range [0,2)
-        while (angleReflection >= 2) {
-          angleReflection -= 2;
-        }
-
-        while (angleReflection < 0) {
-          angleReflection += 2;
-        }
-
-        angleUpdated = angleReflection;
-        dxUpdated = calculateDxFromAngle(angleUpdated);
-        dyUpdated = calculateDyFromAngle(angleUpdated);
-      }
-
-      // flip square color and change scores
-      for (let i = 0; i < squaresToFlip.length; i++) {
-        const oldColor = squares[squaresToFlip[i].sx][squaresToFlip[i].sy];
-
-        // ensure each square is only flipped once
-        if (oldColor === ball.color) continue;
-
-        squares[squaresToFlip[i].sx][squaresToFlip[i].sy] = ball.color;
-
-        scores[ball.color]++;
-        scores[oldColor]--;
-      }
-
-      ball.dx = dxUpdated;
-      ball.dy = dyUpdated;
-      ball.angle = angleUpdated;
     }
 
-    function updateScoreElement() {
-      scoreElement.textContent = `yin ${scores[YIN_COLOR]} | yang ${scores[YANG_COLOR]}`;
+    function update_score_element() {
+        score_element.textContent = `yin ${SCORES[YIN_COLOR]} | yang ${SCORES[YANG_COLOR]}`;
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      updateScoreElement();
+        update_score_element();
 
-      drawSquares();
+        draw_squares();
 
-      balls.forEach((ball) => {
-        drawBall(ball);
-      });
-
-      for (let step = 0; step < SPEED; step++) {
-        balls.forEach((ball) => {
-          if (nearSquareCandidateOrBorder(ball)) {
-            updateSquareAndBounce(ball);
-          }
-          ball.x += ball.dx;
-          ball.y += ball.dy;
+        BALLS.forEach((ball) => {
+            draw_ball(ball);
         });
-      }
 
-      iteration++;
-      if (iteration % 1_000 === 0) console.log("iteration", iteration);
+        for (let step = 0; step < SPEED; step++) {
+            BALLS.forEach((ball) => {
+                check_colls_and_bounce(ball);
+                move_ball(ball);
+                update_ball(ball);
+            });
+            steps++;
+        }
 
-      requestAnimationFrame(draw);
+        if (steps / SPEED % 1_000 === 0) console.log("steps:", steps);
+
+        requestAnimationFrame(draw);
     }
 
     requestAnimationFrame(draw);
-  </script>
+</script>
 </html>
